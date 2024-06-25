@@ -20,5 +20,6 @@ export const productSchema = z.object({
   price: z.coerce.number(),
   categories: CategoryEnum,
   type: TypeEnum,
-  tags: z.array(z.string().min(1).max(15)).min(1).max(3),
+  tags: z.array(z.string().min(1).max(15)).min(1).max(5),
+  images: z.array(z.string())
 });

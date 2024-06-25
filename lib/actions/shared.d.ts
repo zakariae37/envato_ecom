@@ -9,6 +9,7 @@ export interface CreateProductProps {
   type: string;
   seller: Schema.Types.ObjectId;
   tags: string[];
+  images: string[];
   path: string;
 }
 
@@ -65,5 +66,18 @@ export interface UpvoteProductParams{
 export interface GlobalSearchParams {
   query?: string | null,
   type?: string | null
+}
+
+export interface deleteProductParams {
+  productId: string,
+  path: string
+}
+
+export interface EditProductParams {
+  productId: string,
+  title: string,
+  price: number,
+  images: string[],
+  path: string
 }
 

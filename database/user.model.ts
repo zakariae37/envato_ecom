@@ -18,7 +18,6 @@ const UserSchema = new Schema ({
     picture: { type: String, require: true },
     saved: [{ type: Schema.Types.ObjectId , ref: 'Product' }],
     joinedAt: { type: Date, default: Date.now() },
-
 })
 
 const User = models.User || model('User', UserSchema)

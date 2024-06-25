@@ -23,43 +23,63 @@ import { Input } from "@/components/ui/input";
 import { productSchema } from "@/lib/validations";
 import Image from "next/image";
 import { Badge } from "../ui/badge";
-import { createProduct } from "@/lib/actions/product.action";
-import { usePathname, useRouter } from "next/navigation";
+import { createProduct, editProduct } from "@/lib/actions/product.action";
+import { usePathname } from "next/navigation";
+import FileBase from "react-file-base64";
 
 interface Props {
   mongoUserId: string;
+  productDetails?: string;
+  type?: string;
 }
 
-const Product = ({ mongoUserId }: Props) => {
+const Product = ({ mongoUserId, productDetails, type }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
+  const parsedProductDetails =
+    productDetails && JSON.parse(productDetails || "");
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      price: 0,
+      title: parsedProductDetails?.title || "",
+      description: parsedProductDetails?.description || "",
+      price: parsedProductDetails?.price || 0,
       categories: "Code",
       type: "WordPress",
-      tags: []
+      tags: [],
+      images: parsedProductDetails?.images || [],
     },
+    
   });
 
   async function onSubmit(values: z.infer<typeof productSchema>) {
     setIsSubmitting(true);
     try {
-      await createProduct({
-        title: values.title,
-        description: values.description,
-        price: values.price,
-        categories: values.categories,
-        type: values.type,
-        tags: values.tags,
-        seller: JSON.parse(mongoUserId),
-        path: pathname,
-      });
-      router.push("/");
+      if (type === "Edit") {
+        await editProduct({
+          productId: parsedProductDetails._id,
+          title: values.title,
+          price: values.price,
+          images: values.images,
+          path: pathname,
+        });
+        console.log(values);
+      } else {
+        await createProduct({
+          title: values.title,
+          description: values.description,
+          price: values.price,
+          categories: values.categories,
+          type: values.type,
+          tags: values.tags,
+          seller: JSON.parse(mongoUserId),
+          images: Array.isArray(values.images)
+            ? values.images
+            : [values.images],
+          path: pathname,
+        });
+        console.log(values);
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -178,7 +198,30 @@ const Product = ({ mongoUserId }: Props) => {
               </FormItem>
             )}
           />
-          
+          <FormField
+            control={form.control}
+            name="images"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Images <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl className="relative">
+                  <FileBase
+                    type="file"
+                    multiple={true}
+                    onDone={(fileData: any) => {
+                      const newImages = Array.isArray(fileData)
+                        ? fileData.map((file: any) => file.base64)
+                        : [fileData.base64];
+                      field.onChange(newImages);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage className="text-red-500" />
+              </FormItem>
+            )}
+          />
         </div>
         <div className="space-y-4">
           <FormField
@@ -284,7 +327,11 @@ const Product = ({ mongoUserId }: Props) => {
           />
         </div>
         <Button type="submit" className="col-span-full" disabled={isSubmitting}>
-          Submit
+        {isSubmitting ? (
+            <>{type === "Edit" ? "Editing..." : "Posting..."}</>
+          ) : (
+            <>{type === "Edit" ? "Edit Product" : "Create Product"}</>
+          )}
         </Button>
       </form>
     </Form>

@@ -2,9 +2,10 @@ import React from "react";
 import Product from "@/components/forms/Product";
 import { redirect } from "next/navigation";
 import { getUserById } from "@/lib/actions/user.action";
+import { auth } from "@clerk/nextjs";
 
 const createProduct = async () => {
-  const userId = "abc123"
+  const { userId } = auth()
   if (!userId) {
     redirect('/sign-in')
   }
